@@ -50,7 +50,12 @@ export function buildProtectedPattern(config: ProtectionConfig): RegExp {
 
 	// %placeholder% delimiters and contents, single line only
 	if (config.placeholderPercent) {
-		parts.push("%[^%\\r\\n]*%");
+		parts.push("%[^%\r\n]*%");
+	}
+
+	// [square brackets] — preserve everything inside brackets, single line only
+	if (config.squareBrackets) {
+		parts.push("\\[[^\\]]*\\]");
 	}
 
 	// If no patterns are enabled, match nothing (empty alternation that never matches)

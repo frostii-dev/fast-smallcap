@@ -31,6 +31,8 @@ export interface ProtectionConfig {
 	removeEmojiLeftSpace: boolean;
 	/** Remove whitespace to the right of removed emojis */
 	removeEmojiRightSpace: boolean;
+	/** [square brackets] protection */
+	squareBrackets: boolean;
 }
 
 /** Default configuration with all protections enabled. */
@@ -49,6 +51,7 @@ export const DEFAULT_PROTECTION_CONFIG: ProtectionConfig = {
 	removeEmoji: true,
 	removeEmojiLeftSpace: true,
 	removeEmojiRightSpace: true,
+	squareBrackets: true,
 };
 
 /** Storage key for persisting protection config. */

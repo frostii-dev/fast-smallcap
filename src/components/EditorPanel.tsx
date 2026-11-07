@@ -83,6 +83,7 @@ export const EditorPanel = forwardRef<
 							renderLineHighlight: "none",
 							padding: { top: 8, bottom: 8 },
 							fixedOverflowWidgets: true,
+							unicodeHighlight: { ambiguousCharacters: false },
 						}}
 					/>
 				</div>

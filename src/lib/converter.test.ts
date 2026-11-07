@@ -252,7 +252,7 @@ describe("documents", () => {
 		const expected = `{
   "ꜱᴄᴏʀᴇʙᴏᴀʀᴅ": {
     "ᴛɪᴛʟᴇ": "&bꜱᴛᴀᴛꜱ",
-    "ʟɪɴᴇꜱ": ["&7ᴋɪʟʟꜱ: &f{kills}", "&7ʀᴀɴᴋ: &#34c759ʟᴇɢᴇɴᴅ"]
+    "ʟɪɴᴇꜱ": ["&7Kills: &f{kills}", "&7Rank: &#34c759Legend"]
   }
 }`;
 		expect(convertToSmallCaps(input)).toBe(expected);

@@ -25,6 +25,52 @@ Parsing is also used for syntax feedback in `src/lib/validation.ts`: YAML via `e
 
 Verification order: `test -> lint -> typecheck -> build`.
 
+## Persistence (Cross-Session Data)
+
+Fast SmallCaps persists workspace data so that reloading the browser or
+reopening the app restores the user's previous session. Two storage
+mechanisms are used:
+
+### localStorage (lightweight settings)
+- Protection config (`fast-smallcap:protection-config`) — all toggle rules
+- Auto Convert preference (`fast-smallcap:auto-convert`) — on/off state
+- Font size (`fast-smallcap:font-size`) — editor font size (8–72)
+- Word wrap (`fast-smallcap:word-wrap`) — on/off state
+- IndexedDB availability flag (`fast-smallcap:idb-ready`)
+
+### IndexedDB (document data)
+- Database: `fast-smallcap`, version 1
+- Object store: `documents` with `id` (auto-increment key), `name`, `format`,
+  `content`, `output`, `updatedAt` fields
+- Indexes: `name`, `updatedAt`
+- Stores the last active document's original content, converted output, file
+  name, and format
+
+### Files
+- `src/lib/idb.ts` — IndexedDB wrapper with versioned schema, graceful
+  degradation (returns `null` if IndexedDB unavailable), and error handling
+  (all failures logged to console, never crash the app)
+- `src/hooks/useConverter.ts` — Restores document from IndexedDB on mount;
+  debounced writes (500ms) on content/output/file changes
+- `src/App.tsx` — Persists/restores `fontSize` and `wordWrap` to/from
+  localStorage
+
+### Reliability
+- Save-on-change with debounce (no Save button required)
+- Restore-before-render: document data is loaded from IndexedDB during mount
+  before the workspace is presented
+- Corrupted/missing data falls back to defaults without crashing
+- Versioned schema (`DB_VERSION = 1`) — increment and add migration logic in
+  `idb.ts` if the stored shape changes
+- IndexedDB unavailability is detected and logged; app continues working
+  without persistence
+
+### Tests
+- No dedicated persistence test file yet; existing tests (137 total) confirm
+  no regressions from persistence changes
+- Manual verification: load a file, edit content, refresh browser, verify
+  content and converted output are restored
+
 ## Monaco quirks (Vite 8 + rolldown)
 - Deep imports into monaco-editor must follow its exports map: `monaco-editor/<name>.js` resolves to `esm/vs/<name>.js` — do NOT import `monaco-editor/esm/vs/...` (fails to resolve).
 - `?worker` imports cannot target the package directly; use the local wrappers in `src/lib/workers/*.ts` instead, plus ambient declarations in `src/types/monaco-workers.d.ts`.
@@ -49,6 +95,51 @@ Monaco 0.57 renders the context menu inside a **shadow root** (`div.shadow-root-
 - `Enable/Disable All Protections` describe block verifies: every checkbox flips, output matches expected protected/unprotected form, localStorage matches, rapid toggling ends consistent, individual toggles work after batch, and settings survive reload.
 - Fixed pre-existing test bugs: unsatisfiable assertions on YAML-comment `{player}`, `__dirname` in ESM test file, stale `expected/config.properties` lines (dot-properties treats `escaped key:value` as key=`escaped`, value=`key:value=...`), missing `getWordWrap`/`getReadOnly` utils, and menu-lingering strict-mode violations (`openConversionRules` now pre-closes with Escape).
 
+## Auto / Manual Conversion Mode
+
+Added an **Auto Convert** toggle that controls when conversion runs.
+
+### Behavior
+
+**Auto Convert enabled (default):**
+- Conversion runs automatically whenever original editor content or conversion rules change.
+- The Convert button is hidden.
+- Output updates within a 300ms debounce after content changes.
+
+**Auto Convert disabled (manual mode):**
+- The Convert button is shown.
+- Editing the original editor does NOT update converted output.
+- Changing protection rules does NOT update converted output automatically.
+- Clicking Convert processes the latest content, rules, and selection.
+- Previous converted output remains visible until the next manual conversion.
+
+### State Management (`src/hooks/useConverter.ts`)
+- `autoConvert` state (default: `true`) persisted in `localStorage` under key `fast-smallcap:auto-convert`.
+- `setAutoConvert(value)` to toggle.
+- Auto-conversion effects (content changes and config changes) are gated on `autoConvert === true`.
+- `convertNow()` always works regardless of mode — uses the same conversion pipeline.
+- Switching from Manual to Auto triggers an immediate fresh conversion.
+- Switching from Auto to Manual stops automatic conversion immediately.
+
+### Toolbar UI (`src/components/Toolbar.tsx`)
+- **Auto Convert**: Label "Auto Convert" to the left of its `Switch`, positioned immediately before Textual Values Only in the right-side toolbar row. Label is clickable to toggle. Enabled by default.
+- **Word Wrap**: Text label "Word Wrap" to the left of its `Switch`, replacing the previous icon. Label is clickable to toggle.
+- **Conversion Rules Dropdown ("More")**: After Clear button on the left side of the toolbar.
+- Auto Convert and Word Wrap are clickable labels + switch pairs on the same right-side row.
+- Persisted settings via `localStorage` (`fast-smallcap:auto-convert`, `fast-smallcap:word-wrap`).
+
+### Convert Button
+- Always visible in the toolbar (left side).
+- Genuinely disabled and greyed out when Auto Convert is Enabled (using the Button's `disabled` prop).
+- Fully enabled and clickable when Auto Convert is Disabled.
+- Triggers `convertNow()` when clicked.
+
+### Persistence
+- `autoConvert` preference saved to `localStorage` on change under key `fast-smallcap:auto-convert`
+- Restored on app reload
+- Defaults to `true` for new users
+
+
 ## shadcn/ui
 - Components live in `src/components/ui/`; add with `npx shadcn@latest add <name>`. Style "base-mira" uses **@base-ui/react** (not radix) — check the generated component's props (e.g. Switch uses `onCheckedChange`).
 - Conditional classes: `cn()` from `@/lib/utils` — never manual template-literal ternaries
@@ -59,6 +150,39 @@ Monaco 0.57 renders the context menu inside a **shadow root** (`div.shadow-root-
 ## TypeScript quirks
 - `tsc -b` builds project references (`tsconfig.app.json` + `tsconfig.node.json`) — `build` runs this before `vite build`
 - `build` fails if `tsc -b` fails; run `npm run typecheck` separately for a faster check
+
+## Monaco Unicode Highlighting
+
+Both Monaco Editor instances in `EditorPanel.tsx` disable ambiguous Unicode highlighting:
+
+```typescript
+unicodeHighlight: { ambiguousCharacters: false }
+```
+
+This prevents the "This document contains many ambiguous unicode characters" warning from appearing, since Fast SmallCaps intentionally outputs Unicode small-cap characters. Normal syntax highlighting, diagnostics, and editor functionality are unaffected.
+
+## Square Bracket Protection
+
+Added `squareBrackets` protection rule to `ProtectionConfig` (default: `true`).
+
+### Config (`src/lib/protection-config.ts`)
+- `squareBrackets: boolean` — Preserve all text inside `[...]` brackets, including brackets
+
+### Pattern (`src/lib/protected-patterns.ts`)
+- `\[[^\]]*\]` — Matches `[` to first `]`, single line only. Added after placeholder patterns in alternation order.
+- Handles: empty brackets `[]`, spaces, numbers, underscores, punctuation, Unicode inside brackets
+- Safe with unmatched brackets (no match if no closing `]`)
+
+### Toolbar UI (`src/lib/components/Toolbar.tsx`)
+- New "Square Bracket Protection" section with checkbox: `[] Square Bracket Protection`
+- Enabled by default, independently toggleable
+- Included in Enable All / Disable All / Reset Defaults
+- Output updates immediately on toggle
+- Persisted in localStorage via existing protection config mechanism
+
+### Tests
+- `src/lib/converter.squarebrackets.test.ts` — 19 unit tests covering: single/multiple/adjacent brackets, empty brackets, spaces/numbers/underscores/Unicode inside brackets, nested brackets, unmatched brackets, interaction with other rules (placeholders, Minecraft codes, hex colors, emoji removal), idempotency.
+
 
 ## Emoji Removal Feature
 

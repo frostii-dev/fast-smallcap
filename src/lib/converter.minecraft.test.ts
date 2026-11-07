@@ -83,15 +83,15 @@ broken.\\nline=tab\\there
     "ꜰᴏʀᴍᴀᴛ": "&7[{prefix}&7] &f{name}: &f{message}",
     "ʀᴀɴᴋꜱ": {
       "ᴠɪᴘ": {
-        "ᴘʀᴇꜰɪx": "&6[ᴠɪᴘ]",
+        "ᴘʀᴇꜰɪx": "&6[VIP]",
         "ᴄᴏʟᴏʀ": "#ffaa00"
       },
       "ᴍᴠᴘ": {
-        "ᴘʀᴇꜰɪx": "&#55fF55[ᴍᴠᴘ]",
+        "ᴘʀᴇꜰɪx": "&#55fF55[MVP]",
         "ᴄᴏʟᴏʀ": "#abcdef"
       }
     },
-    "ꜰɪʟᴛᴇʀꜱ": ["[ʟᴏɢᴏ]", "%mention%", "<spoiler>"]
+    "ꜰɪʟᴛᴇʀꜱ": ["[logo]", "%mention%", "<spoiler>"]
   }
 }`;
 		expect(convertToSmallCaps(input)).toBe(expected);

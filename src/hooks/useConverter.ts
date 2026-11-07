@@ -3,17 +3,36 @@ import { convertToSmallCaps } from "@/lib/converter";
 import { convertDocument } from "@/lib/document-converter";
 import { validateSyntax, type SyntaxValidation } from "@/lib/validation";
 import {
+	getStoredDocument,
+	isIndexedDBAvailable,
+	saveDocument,
+} from "@/lib/idb";
+import {
 	loadProtectionConfig,
 	saveProtectionConfig,
 	type ProtectionConfig,
 	DEFAULT_PROTECTION_CONFIG,
 } from "@/lib/protection-config";
-import type { ConversionStatus, LoadedFileInfo } from "@/types";
+
+const AUTO_CONVERT_STORAGE_KEY = "fast-smallcap:auto-convert";
+import type { ConversionStatus, FileFormat, LoadedFileInfo } from "@/types";
 
 // For openFile callback
 import { getFormatFromName } from "@/lib/file-utils";
 
 const AUTO_CONVERT_DELAY_MS = 300;
+
+/**
+ * Debounce delay (ms) before writing document data to IndexedDB.
+ * Avoids writing on every keystroke while keeping persistence timely.
+ */
+const IDB_WRITE_DELAY_MS = 500;
+
+/**
+ * Key for storing whether IndexedDB was successfully initialized.
+ * Used to surface a warning if persistence cannot be guaranteed.
+ */
+const INDEXEDDB_READY_KEY = "fast-smallcap:idb-ready";
 
 export function useConverter() {
 	const [file, setFile] = useState<LoadedFileInfo | null>(null);
@@ -31,6 +50,133 @@ export function useConverter() {
 	useEffect(() => {
 		saveProtectionConfig(protectionConfig);
 	}, [protectionConfig]);
+
+	// Persist auto-convert preference to localStorage (default: enabled)
+	const [autoConvert, setAutoConvert] = useState<boolean>(() => {
+		if (typeof window === "undefined") {
+			return true;
+		}
+		try {
+			const stored = window.localStorage.getItem(AUTO_CONVERT_STORAGE_KEY);
+			if (stored !== null) {
+				return stored === "true";
+			}
+		} catch {
+			// Ignore read errors, use default
+		}
+		return true;
+	});
+
+	// Persist auto-convert preference
+	useEffect(() => {
+		if (typeof window === "undefined") {
+			return;
+		}
+		try {
+			window.localStorage.setItem(
+				AUTO_CONVERT_STORAGE_KEY,
+				String(autoConvert)
+			);
+		} catch {
+			// Ignore write errors
+		}
+	}, [autoConvert]);
+
+	// Persist IndexedDB availability flag so we can warn the user if needed
+	useEffect(() => {
+		if (typeof window === "undefined") {
+			return;
+		}
+		const ready = isIndexedDBAvailable();
+		try {
+			window.localStorage.setItem(INDEXEDDB_READY_KEY, String(ready));
+			if (!ready) {
+				console.warn(
+					"[fast-smallcap] IndexedDB is not available in this browser. Document persistence will be disabled."
+				);
+			}
+		} catch {
+			// Ignore write errors
+		}
+	}, []);
+
+	// Ref for debounced IndexedDB writes
+	const idbWriteTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+	/**
+	 * Debounced write of the current document to IndexedDB.
+	 * Only writes when there is actual content to persist.
+	 */
+	const persistDocument = useCallback(() => {
+		if (!isIndexedDBAvailable() || !file || content.length === 0) {
+			return;
+		}
+
+		if (idbWriteTimer.current) {
+			clearTimeout(idbWriteTimer.current);
+		}
+
+		idbWriteTimer.current = setTimeout(async () => {
+			try {
+				await saveDocument({
+					name: file.name,
+					format: file.format,
+					content,
+					output,
+				});
+			} catch (err) {
+				console.warn("[fast-smallcap] Failed to persist document:", err);
+			}
+		}, IDB_WRITE_DELAY_MS);
+	}, [file, content, output]);
+
+	// Restore document from IndexedDB on startup (before any user interaction)
+	useEffect(() => {
+		let cancelled = false;
+
+		async function restoreDocument(): Promise<void> {
+			if (!isIndexedDBAvailable()) {
+				return;
+			}
+
+			try {
+				const stored = await getStoredDocument();
+				if (stored && !cancelled) {
+					// Validate schema version implicitly by checking required fields
+					if (
+						typeof stored.content === "string" &&
+						typeof stored.output === "string" &&
+						stored.name &&
+						stored.format
+					) {
+						setFile({ name: stored.name, format: stored.format as FileFormat });
+						setContent(stored.content);
+						setOutput(stored.output);
+						setConvertedSource(stored.content);
+					}
+				}
+			} catch (err) {
+				console.warn(
+					"[fast-smallcap] Failed to restore document from IndexedDB:",
+					err
+				);
+			}
+		}
+
+		void restoreDocument();
+
+		return () => {
+			cancelled = true;
+			if (idbWriteTimer.current) {
+				clearTimeout(idbWriteTimer.current);
+			}
+		};
+	}, []);
+
+	// Persist document to IndexedDB whenever content, output, or file changes
+	useEffect(() => {
+		persistDocument();
+	}, [content, output, file, persistDocument]);
 
 	// Run conversion with all discoverable string-value ranges
 	const runConversion = useCallback(
@@ -51,8 +197,11 @@ export function useConverter() {
 		[file, textualOnly, protectionConfig]
 	);
 
-	// Debounced auto-conversion for content changes
+	// Debounced auto-conversion for content changes (only when Auto Convert is enabled)
 	useEffect(() => {
+		if (!autoConvert) {
+			return undefined;
+		}
 		const timer = window.setTimeout(() => {
 			runConversion(content);
 			setValidation(
@@ -60,21 +209,24 @@ export function useConverter() {
 			);
 		}, AUTO_CONVERT_DELAY_MS);
 		return () => window.clearTimeout(timer);
-	}, [content, file, runConversion]);
+	}, [content, file, runConversion, autoConvert]);
 
-	// Immediate conversion for config changes
+	// Immediate conversion for config changes (only when Auto Convert is enabled)
 	const contentRef = useRef(content);
 	useEffect(() => {
 		contentRef.current = content;
 	}, [content]);
 	useEffect(() => {
+		if (!autoConvert) {
+			return undefined;
+		}
 		const source = contentRef.current;
 		if (source.length === 0) {
-			return;
+			return undefined;
 		}
 		runConversion(source);
 		setValidation(validateSyntax(file === null ? null : file.format, source));
-	}, [protectionConfig, textualOnly, runConversion, file]);
+	}, [protectionConfig, textualOnly, runConversion, file, autoConvert]);
 
 	const convertNow = useCallback(() => {
 		runConversion(content);
@@ -181,5 +333,7 @@ export function useConverter() {
 		clear,
 		clearError,
 		getConverted,
+		autoConvert,
+		setAutoConvert,
 	};
 }

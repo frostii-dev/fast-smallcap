@@ -14,6 +14,9 @@ import {
 } from "@/lib/file-utils";
 import "@/lib/monaco-setup";
 
+const FONT_SIZE_STORAGE_KEY = "fast-smallcap:font-size";
+const WORD_WRAP_STORAGE_KEY = "fast-smallcap:word-wrap";
+
 export default function App() {
 	const fileInputRef = useRef<HTMLInputElement>(null);
 	const originalEditorRef = useRef<{
@@ -22,8 +25,42 @@ export default function App() {
 	const convertedEditorRef = useRef<{
 		getEditor: () => editor.IStandaloneCodeEditor | undefined;
 	} | null>(null);
-	const [fontSize, setFontSize] = useState(13);
-	const [wordWrap, setWordWrap] = useState(true);
+
+	// Persist font size to localStorage
+	const [fontSize, setFontSize] = useState<number>(() => {
+		if (typeof window === "undefined") {
+			return 13;
+		}
+		try {
+			const stored = window.localStorage.getItem(FONT_SIZE_STORAGE_KEY);
+			if (stored !== null) {
+				const parsed = parseInt(stored, 10);
+				if (!isNaN(parsed) && parsed >= 8 && parsed <= 72) {
+					return parsed;
+				}
+			}
+		} catch {
+			// Ignore read errors, use default
+		}
+		return 13;
+	});
+
+	// Persist word wrap to localStorage
+	const [wordWrap, setWordWrap] = useState<boolean>(() => {
+		if (typeof window === "undefined") {
+			return true;
+		}
+		try {
+			const stored = window.localStorage.getItem(WORD_WRAP_STORAGE_KEY);
+			if (stored !== null) {
+				return stored === "true";
+			}
+		} catch {
+			// Ignore read errors, use default
+		}
+		return true;
+	});
+
 	const {
 		file,
 		content,
@@ -44,6 +81,8 @@ export default function App() {
 		clear,
 		clearError,
 		getConverted,
+		autoConvert,
+		setAutoConvert,
 	} = useConverter();
 
 	const openFilePicker = useCallback(() => {
@@ -96,9 +135,27 @@ export default function App() {
 				onClear={clear}
 				hasContent={content.length > 0}
 				fontSize={fontSize}
-				onFontSizeChange={setFontSize}
+				onFontSizeChange={(size) => {
+					setFontSize(size);
+					if (typeof window !== "undefined") {
+						try {
+							window.localStorage.setItem(FONT_SIZE_STORAGE_KEY, String(size));
+						} catch {
+							// Ignore write errors
+						}
+					}
+				}}
 				wordWrap={wordWrap}
-				onWordWrapChange={setWordWrap}
+				onWordWrapChange={(wrap) => {
+					setWordWrap(wrap);
+					if (typeof window !== "undefined") {
+						try {
+							window.localStorage.setItem(WORD_WRAP_STORAGE_KEY, String(wrap));
+						} catch {
+							// Ignore write errors
+						}
+					}
+				}}
 				textualOnly={textualOnly}
 				onTextualOnlyChange={setTextualOnly}
 				showTextualOnly={file?.format === "properties"}
@@ -107,6 +164,8 @@ export default function App() {
 				onEnableAllProtections={enableAllProtections}
 				onDisableAllProtections={disableAllProtections}
 				onResetProtections={resetProtections}
+				autoConvert={autoConvert}
+				onAutoConvertChange={setAutoConvert}
 			/>
 			<div className="flex min-h-0 flex-1 overflow-hidden">
 				{/* Editors panel */}

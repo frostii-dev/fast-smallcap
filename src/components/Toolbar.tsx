@@ -5,7 +5,6 @@ import {
 	Download,
 	Eraser,
 	Smile,
-	WrapText,
 	Shield,
 	ShieldCheck,
 } from "lucide-react";
@@ -60,6 +59,10 @@ type ToolbarProps = {
 	onDisableAllProtections: () => void;
 	/** Reset protection rules to defaults. */
 	onResetProtections: () => void;
+	/** Auto-convert enabled state. */
+	autoConvert: boolean;
+	/** Callback when auto-convert toggle changes. */
+	onAutoConvertChange: (value: boolean) => void;
 };
 
 export function Toolbar({
@@ -80,6 +83,8 @@ export function Toolbar({
 	onEnableAllProtections,
 	onDisableAllProtections,
 	onResetProtections,
+	autoConvert,
+	onAutoConvertChange,
 }: ToolbarProps) {
 	const [copied, setCopied] = useState(false);
 
@@ -99,7 +104,11 @@ export function Toolbar({
 
 	return (
 		<div className="z-50 flex h-11 shrink-0 items-center gap-1 border-b px-3">
-			<Button size="sm" onClick={onConvert} disabled={!hasContent}>
+			<Button
+				size="sm"
+				onClick={onConvert}
+				disabled={autoConvert || !hasContent}
+			>
 				<ArrowRightLeft data-icon="inline-start" />
 				Convert
 			</Button>
@@ -316,6 +325,21 @@ export function Toolbar({
 
 					<DropdownMenuSeparator />
 
+					{/* Square Bracket Protection */}
+					<DropdownMenuGroup>
+						<DropdownMenuLabel>Square Bracket Protection</DropdownMenuLabel>
+						<DropdownMenuCheckboxItem
+							checked={protectionConfig.squareBrackets}
+							onCheckedChange={(checked) =>
+								onProtectionRuleChange("squareBrackets", checked)
+							}
+						>
+							[] Square Bracket Protection
+						</DropdownMenuCheckboxItem>
+					</DropdownMenuGroup>
+
+					<DropdownMenuSeparator />
+
 					{/* Actions */}
 					<DropdownMenuGroup>
 						<DropdownMenuItem
@@ -341,6 +365,21 @@ export function Toolbar({
 			</DropdownMenu>
 
 			<div className="ml-auto flex items-center gap-3 text-xs text-muted-foreground">
+				{/* Auto Convert Control */}
+				<div className="flex items-center gap-1.5" title="Auto Convert">
+					<span
+						className="cursor-pointer text-xs text-muted-foreground select-none"
+						onClick={() => onAutoConvertChange(!autoConvert)}
+					>
+						Auto Convert
+					</span>
+					<Switch
+						size="sm"
+						checked={autoConvert}
+						onCheckedChange={(checked) => onAutoConvertChange(checked)}
+						aria-label="Auto Convert"
+					/>
+				</div>
 				{showTextualOnly ? (
 					<div
 						className="flex items-center gap-1.5"
@@ -356,7 +395,9 @@ export function Toolbar({
 					</div>
 				) : null}
 				<div className="flex items-center gap-1.5" title="Toggle word wrap">
-					<WrapText className="size-3.5" />
+					<span className="cursor-pointer text-xs text-muted-foreground select-none">
+						Word Wrap
+					</span>
 					<Switch
 						size="sm"
 						checked={wordWrap}
