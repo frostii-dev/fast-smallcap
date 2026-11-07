@@ -1,0 +1,30 @@
+{
+  "displayName": "Hello &aPlayer {player}",
+  "maxPlayers": 100,
+  "price": 12.5,
+  "enabled": true,
+  "disabled": false,
+  "unknown": null,
+  "emptyName": "",
+  "whitespaceOnly": "  ",
+  "hexMixed": "prefix #12abef suffix &#FF00AA",
+  "sectionHex": "palette §x§F§F§0§0§A§A end",
+  "legacy": "&lBold §cRed %player%",
+  "placeholders": "<player> {player} %player% all",
+  "overlapSeq": "%player%{player}%&aQuick end",
+  "unicode": "Café déjà vu — 日本語",
+  "upper": "UPPER CASE &bTEXT",
+  "paths": ["Survival", "Adventure &#FF00AA"],
+  "nums": [100, 12.5, -3],
+  "bools": [true, false],
+  "nulls": [null, ""],
+  "nested": {
+    "deep": {
+      "description": "Welcome to <server> %#000000% end",
+      "items": [
+        { "name": "Item &aTest", "weight": 2.5 },
+        "plain &c§ #1a2b3c"
+      ]
+    }
+  }
+}

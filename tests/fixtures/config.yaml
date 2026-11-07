@@ -1,0 +1,33 @@
+# Header comment would convert wrongly if comments were parsed: {player} &#FF00AA
+display-name: "Hello &aPlayer {player}!"
+description: Welcome to <server> §clobby %player% ok
+max-players: 100
+radius: 12.5
+enabled: true
+fallback: false
+spawn-location: null
+UPPERCASE_KEY: Value
+empty-name: ""
+whitespace-only: "   "
+motd: |
+  Welcome &l{player}!
+  Second line with #12abef inline.
+folded: >-
+  Folded &o<player> text here
+anchored: &anchor "Anchored &#FF00AA value"
+aliased: *anchor
+list: [Survival, 100, true, null, "Mixed §x§F§F§0§0§A§A tag"]
+date-string: "2026-11-05"
+unicode: "Café déjà vu — 日本語 ✓"
+hex-plain-text: "color#FFFFFFtext end"
+hex-punct: "edge #000000, and more"
+nested:
+  deep:
+    display name: "Deep &lName <tag> %pos%"
+    weight: 2.5
+    flag: false
+    note: null
+    items:
+      - "&aFirst {item}"
+      - 250
+      - plain &c§ hard #1a2b3c end

@@ -1,0 +1,10 @@
+# .yml variant &#FF00AA {player}
+title: "ᴀʀᴇɴᴀ &bᴄᴏɴꜰɪɢ <player>"
+slots: 32
+open: true
+entry: null
+motd: >-
+  ʟɪɢᴀᴛᴜʀᴇ &n{player} ᴏᴋ #FFFFFF
+tags: [ "ᴀʟᴘʜᴀ &aᴀ", 5, false ]
+nested:
+  inner: "ᴅᴇᴇᴘ §x§A§A§0§0§F§F üɴïᴄᴏᴅᴇ"

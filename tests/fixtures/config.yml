@@ -1,0 +1,10 @@
+# .yml variant &#FF00AA {player}
+title: "Arena &bConfig <player>"
+slots: 32
+open: true
+entry: null
+motd: >-
+  Ligature &n{player} ok #FFFFFF
+tags: [ "Alpha &aA", 5, false ]
+nested:
+  inner: "Deep §x§A§A§0§0§F§F ünïcode"

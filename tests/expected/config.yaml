@@ -1,0 +1,33 @@
+# Header comment would convert wrongly if comments were parsed: {player} &#FF00AA
+display-name: "ʜᴇʟʟᴏ &aᴘʟᴀʏᴇʀ {player}!"
+description: ᴡᴇʟᴄᴏᴍᴇ ᴛᴏ <server> §cʟᴏʙʙʏ %player% ᴏᴋ
+max-players: 100
+radius: 12.5
+enabled: true
+fallback: false
+spawn-location: null
+UPPERCASE_KEY: ᴠᴀʟᴜᴇ
+empty-name: ""
+whitespace-only: "   "
+motd: |
+  ᴡᴇʟᴄᴏᴍᴇ &l{player}!
+  ꜱᴇᴄᴏɴᴅ ʟɪɴᴇ ᴡɪᴛʜ #12abef ɪɴʟɪɴᴇ.
+folded: >-
+  ꜰᴏʟᴅᴇᴅ &o<player> ᴛᴇxᴛ ʜᴇʀᴇ
+anchored: &anchor "ᴀɴᴄʜᴏʀᴇᴅ &#FF00AA ᴠᴀʟᴜᴇ"
+aliased: *anchor
+list: [ꜱᴜʀᴠɪᴠᴀʟ, 100, true, null, "ᴍɪxᴇᴅ §x§F§F§0§0§A§A ᴛᴀɢ"]
+date-string: "2026-11-05"
+unicode: "ᴄᴀꜰé ᴅéᴊà ᴠᴜ — 日本語 ✓"
+hex-plain-text: "ᴄᴏʟᴏʀ#FFFFFFᴛᴇxᴛ ᴇɴᴅ"
+hex-punct: "ᴇᴅɢᴇ #000000, ᴀɴᴅ ᴍᴏʀᴇ"
+nested:
+  deep:
+    display name: "ᴅᴇᴇᴘ &lɴᴀᴍᴇ <tag> %pos%"
+    weight: 2.5
+    flag: false
+    note: null
+    items:
+      - "&aꜰɪʀꜱᴛ {item}"
+      - 250
+      - ᴘʟᴀɪɴ &c§ ʜᴀʀᴅ #1a2b3c end

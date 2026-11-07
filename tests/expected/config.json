@@ -1,0 +1,30 @@
+{
+  "displayName": "ʜᴇʟʟᴏ &aᴘʟᴀʏᴇʀ {player}",
+  "maxPlayers": 100,
+  "price": 12.5,
+  "enabled": true,
+  "disabled": false,
+  "unknown": null,
+  "emptyName": "",
+  "whitespaceOnly": "  ",
+  "hexMixed": "ᴘʀᴇꜰɪx #12abef ꜱᴜꜰꜰɪx &#FF00AA",
+  "sectionHex": "ᴘᴀʟᴇᴛᴛᴇ §x§F§F§0§0§A§A ᴇɴᴅ",
+  "legacy": "&lʙᴏʟᴅ §cʀᴇᴅ %player%",
+  "placeholders": "<player> {player} %player% ᴀʟʟ",
+  "overlapSeq": "%player%{player}%&aǫᴜɪᴄᴋ ᴇɴᴅ",
+  "unicode": "ᴄᴀꜰé ᴅéᴊà ᴠᴜ — 日本語",
+  "upper": "ᴜᴘᴘᴇʀ ᴄᴀꜱᴇ &bᴛᴇxᴛ",
+  "paths": ["ꜱᴜʀᴠɪᴠᴀʟ", "ᴀᴅᴠᴇɴᴛᴜʀᴇ &#FF00AA"],
+  "nums": [100, 12.5, -3],
+  "bools": [true, false],
+  "nulls": [null, ""],
+  "nested": {
+    "deep": {
+      "description": "ᴡᴇʟᴄᴏᴍᴇ ᴛᴏ <server> %#000000% ᴇɴᴅ",
+      "items": [
+        { "name": "ɪᴛᴇᴍ &aᴛᴇꜱᴛ", "weight": 2.5 },
+        "ᴘʟᴀɪɴ &c§ #1a2b3c"
+      ]
+    }
+  }
+}

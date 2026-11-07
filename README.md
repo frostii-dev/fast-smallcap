@@ -1,21 +1,39 @@
-# React + TypeScript + Vite + shadcn/ui
+# Fast SmallCaps
 
-This is a template for a new Vite project with React, TypeScript, and shadcn/ui.
+A syntax-aware, string-value-only small caps converter for Minecraft configuration files.
 
-## Adding components
+## Features
 
-To add components to your app, run the following command:
+- **Format-aware conversion**: Only converts actual string values in YAML, JSON, and Properties files
+- **Preserves structure**: Keys, numbers, booleans, null, comments, and formatting remain unchanged
+- **Minecraft-aware protection**: Placeholders (`{player}`, `<player>`, `%player%`), formatting codes (`&a`, `§c`), and hex colors (`#FF00AA`, `&#FF00AA`, `§x§R§R§G§G§B§B`) are preserved by default
+- **Configurable protection rules**: Toggle individual protection rules via the Conversion Rules dropdown
+- **Monaco Editor**: Full syntax highlighting, line numbers, word wrap, font size control
+- **Dark theme**: Developer-friendly dark UI with teal/emerald accents
+- **File operations**: Open, copy, download, and clear with original filename preservation
+
+## Supported Formats
+
+- `.yaml` / `.yml`
+- `.json`
+- `.properties`
+
+## Commands
 
 ```bash
-npx shadcn@latest add button
+npm run dev      # Start development server
+npm run build    # Production build
+npm run test     # Run unit tests (vitest)
+npm run typecheck # TypeScript type checking
+npm run lint     # ESLint
+npm run format   # Prettier formatting
 ```
 
-This will place the ui components in the `src/components` directory.
+## Tech Stack
 
-## Using components
-
-To use the components in your app, import them as follows:
-
-```tsx
-import { Button } from "@/components/ui/button"
-```
+- Vite 8 (rolldown) + React 19 + TypeScript
+- shadcn/ui with @base-ui/react
+- Tailwind CSS v4
+- Monaco Editor (bundled locally)
+- yaml (YAML parsing) + @humanwhocodes/momoa (JSON parsing) + dot-properties (Properties parsing)
+- Vitest for testing
